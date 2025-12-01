@@ -1,0 +1,50 @@
+/* You can add global styles to this file, and also import other style files */
+/* Global Styles - Remove white spaces */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Your existing CSS goes here */
+:host {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
+  --accent: #10b981;
+  --accent-dark: #059669;
+  --warm-cream: #fef7ed;
+  --warm-beige: #f5e6d3;
+  --warm-tan: #e8d5b7;
+  --warm-brown: #d4a574;
+  --warm-coffee: #b08968;
+  --warm-chocolate: #8b5a2b;
+  --warm-orange: #f59e0b;
+  --warm-amber: #d97706;
+  --warm-green: #84cc16;
+  --warm-teal: #0d9488;
+  --dark: #1c1917;
+  --dark-card: #292524;
+  --dark-elevated: #44403c;
+  --light: #fef7ed;
+  --border: rgba(212, 165, 116, 0.3);
+  --shadow: 0 4px 20px rgba(139, 90, 43, 0.15);
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(180deg, #1c1917 0%, #292524 100%);
+  color: var(--light);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+/* Rest of your CSS... */

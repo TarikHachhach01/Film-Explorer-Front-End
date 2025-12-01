@@ -1,0 +1,334 @@
+<div class="movie-detail-container" *ngIf="!isLoading && movie">
+  <!-- Back Button -->
+  <button class="back-button" (click)="goBack()">
+    <i class="fas fa-arrow-left"></i> Back to Search
+  </button>
+
+  <!-- Movie Header -->
+  <div class="movie-header">
+    <div class="movie-poster-section">
+      <img 
+        *ngIf="movie.posterPath" 
+        [src]="'https://image.tmdb.org/t/p/w500' + movie.posterPath" 
+        [alt]="movie.title"
+        class="movie-poster-large"
+      />
+      <div *ngIf="!movie.posterPath" class="no-poster-large">
+        <i class="fas fa-film"></i>
+        <p>No Poster Available</p>
+      </div>
+    </div>
+
+    <div class="movie-info-section">
+      <h1 class="movie-title">{{ movie.title }}</h1>
+      <p class="movie-year" *ngIf="movie.releaseYear">({{ movie.releaseYear }})</p>
+
+      <!-- Rating and Stats -->
+      <div class="movie-stats">
+        <div class="stat-item">
+          <i class="fas fa-star"></i>
+          <span class="stat-value">{{ formatRating(movie.rating) }}</span>
+          <span class="stat-label">{{ movie.isImdbRated ? 'IMDb' : 'TMDb' }}</span>
+        </div>
+        <div class="stat-item" *ngIf="movie.imdbRating">
+          <i class="fab fa-imdb"></i>
+          <span class="stat-value">{{ formatRating(movie.imdbRating) }}</span>
+          <span class="stat-label">IMDb</span>
+        </div>
+        <div class="stat-item" *ngIf="movie.voteCount">
+          <i class="fas fa-users"></i>
+          <span class="stat-value">{{ movie.voteCount | number }}</span>
+          <span class="stat-label">Votes</span>
+        </div>
+        <div class="stat-item" *ngIf="movie.runtime">
+          <i class="fas fa-clock"></i>
+          <span class="stat-value">{{ movie.runtime }}</span>
+          <span class="stat-label">minutes</span>
+        </div>
+      </div>
+
+      <!-- Genres -->
+      <div class="genres-section" *ngIf="movie.genres && movie.genres.length > 0">
+        <span class="genre-badge" *ngFor="let genre of movie.genres">{{ genre }}</span>
+      </div>
+
+      <!-- Watchlist Button -->
+      <div class="watchlist-section" *ngIf="isAuthenticated">
+        <!-- If NOT in watchlist - Show Add Button with Dropdown -->
+        <div class="watchlist-button-group" *ngIf="!isInWatchlist">
+          <button 
+            class="watchlist-btn add-btn"
+            (click)="addToWatchlist('WANT_TO_WATCH')"
+            [disabled]="isAddingToWatchlist"
+          >
+            <i class="fas fa-plus"></i>
+            <span *ngIf="!isAddingToWatchlist">Add to Watchlist</span>
+            <span *ngIf="isAddingToWatchlist">Adding...</span>
+          </button>
+          
+          <button 
+            class="watchlist-btn dropdown-toggle"
+            (click)="toggleStatusDropdown()"
+            [disabled]="isAddingToWatchlist"
+          >
+            <i class="fas fa-chevron-down"></i>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div class="status-dropdown" *ngIf="showStatusDropdown">
+            <button 
+              class="status-option"
+              *ngFor="let status of watchlistStatuses"
+              (click)="addToWatchlist(status.value)"
+            >
+              {{ status.icon }} {{ status.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- If IN watchlist - Show Status and Options -->
+        <div class="watchlist-button-group" *ngIf="isInWatchlist">
+          <button 
+            class="watchlist-btn in-watchlist-btn"
+            (click)="toggleStatusDropdown()"
+            [disabled]="isAddingToWatchlist"
+          >
+            <span>{{ getStatusIcon(currentStatus) }} {{ getStatusLabel(currentStatus) }}</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+
+          <!-- Dropdown Menu for Status Change -->
+          <div class="status-dropdown" *ngIf="showStatusDropdown">
+            <button 
+              class="status-option"
+              *ngFor="let status of watchlistStatuses"
+              (click)="updateWatchlistStatus(status.value)"
+              [class.active]="status.value === currentStatus"
+            >
+              {{ status.icon }} {{ status.label }}
+              <i class="fas fa-check" *ngIf="status.value === currentStatus"></i>
+            </button>
+            <hr>
+            <button 
+              class="status-option remove-option"
+              (click)="removeFromWatchlist()"
+            >
+              <i class="fas fa-trash"></i> Remove from Watchlist
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login Prompt if not authenticated -->
+      <div class="login-prompt" *ngIf="!isAuthenticated">
+        <p><i class="fas fa-info-circle"></i> Login to add this movie to your watchlist</p>
+      </div>
+
+      <!-- Director and Cast -->
+      <div class="credits-section">
+        <div class="credit-item" *ngIf="movie.director">
+          <span class="credit-label">Director:</span>
+          <span class="credit-value">{{ movie.director }}</span>
+        </div>
+        <div class="credit-item" *ngIf="movie.mainStars && movie.mainStars.length > 0">
+          <span class="credit-label">Cast:</span>
+          <span class="credit-value">{{ movie.mainStars.join(', ') }}</span>
+        </div>
+      </div>
+
+      <!-- Overview -->
+      <div class="overview-section" *ngIf="movie.overview">
+        <h3>Overview</h3>
+        <p>{{ movie.overview }}</p>
+      </div>
+
+      <!-- Original Title (for foreign films) -->
+      <div class="original-title" *ngIf="movie.originalTitle && movie.originalTitle !== movie.title">
+        <span class="label">Original Title:</span>
+        <span class="value">{{ movie.originalTitle }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- REVIEWS SECTION -->
+  <!-- ============================================ -->
+  <div class="reviews-section">
+    <div class="reviews-header">
+      <h2>
+        <i class="fas fa-comments"></i>
+        User Reviews ({{ totalReviews }})
+      </h2>
+      
+      <!-- Write Review Button (Only for authenticated users) -->
+      <button 
+        *ngIf="isAuthenticated" 
+        class="write-review-btn"
+        (click)="toggleReviewForm()"
+      >
+        <i class="fas fa-pencil-alt"></i>
+        {{ showReviewForm ? 'Cancel' : 'Write a Review' }}
+      </button>
+    </div>
+
+    <!-- Review Form -->
+    <div class="review-form" *ngIf="showReviewForm && isAuthenticated">
+      <h3>{{ editingReview ? 'Edit Your Review' : 'Write Your Review' }}</h3>
+      
+      <div class="form-group">
+        <label for="reviewRating">Rating *</label>
+        <div class="star-rating">
+          <span 
+            *ngFor="let star of [1,2,3,4,5,6,7,8,9,10]"
+            class="star"
+            [class.filled]="star <= reviewForm.rating"
+            (click)="setRating(star)"
+          >
+            ★
+          </span>
+          <span class="rating-value">{{ reviewForm.rating }}/10</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="reviewTitle">Review Title *</label>
+        <input 
+          type="text" 
+          id="reviewTitle"
+          [(ngModel)]="reviewForm.title"
+          placeholder="Sum up your review in one line"
+          maxlength="100"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="reviewContent">Review *</label>
+        <textarea 
+          id="reviewContent"
+          [(ngModel)]="reviewForm.content"
+          placeholder="Share your thoughts about this movie..."
+          rows="6"
+        ></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          class="submit-btn"
+          (click)="submitReview()"
+          [disabled]="isSubmitting || !isReviewValid()"
+        >
+          <i class="fas fa-paper-plane"></i>
+          {{ isSubmitting ? 'Submitting...' : (editingReview ? 'Update Review' : 'Post Review') }}
+        </button>
+        <button 
+          class="cancel-btn"
+          (click)="cancelReview()"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- Login Prompt for Reviews -->
+    <div class="review-login-prompt" *ngIf="!isAuthenticated">
+      <i class="fas fa-info-circle"></i>
+      <p>Please <a routerLink="/login">login</a> to write a review</p>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="reviews-list" *ngIf="reviews.length > 0">
+      <div class="review-card" *ngFor="let review of reviews">
+        <div class="review-header">
+          <div class="review-user-info">
+            <i class="fas fa-user-circle"></i>
+            <span class="username">{{ review.userEmail }}</span>
+            <span class="review-date">{{ review.createdAt | date: 'short' }}</span>
+          </div>
+          
+          <div class="review-rating">
+            <i class="fas fa-star"></i>
+            <span>{{ review.rating }}/10</span>
+          </div>
+        </div>
+
+        <h4 class="review-title">{{ review.title }}</h4>
+        <p class="review-content">{{ review.content }}</p>
+
+        <div class="review-footer">
+          <div class="review-likes">
+            <button 
+              class="like-btn"
+              [class.liked]="review.isLiked"
+              (click)="toggleLike(review)"
+              [disabled]="!isAuthenticated"
+            >
+              <i class="fas fa-thumbs-up"></i>
+              <span>{{ review.likesCount }}</span>
+            </button>
+          </div>
+
+          <!-- Edit/Delete buttons (only for review author) -->
+          <div class="review-actions" *ngIf="review.isAuthor">
+            <button 
+              class="edit-btn"
+              (click)="editReview(review)"
+            >
+              <i class="fas fa-edit"></i>
+              Edit
+            </button>
+            <button 
+              class="delete-btn"
+              (click)="deleteReview(review.id)"
+            >
+              <i class="fas fa-trash"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Reviews Message -->
+    <div class="no-reviews" *ngIf="reviews.length === 0 && !isLoadingReviews">
+      <i class="fas fa-comment-slash"></i>
+      <h3>No reviews yet</h3>
+      <p>Be the first to review this movie!</p>
+    </div>
+
+    <!-- Loading Reviews -->
+    <div class="loading-reviews" *ngIf="isLoadingReviews">
+      <div class="spinner"></div>
+      <p>Loading reviews...</p>
+    </div>
+
+    <!-- Pagination -->
+    <div class="reviews-pagination" *ngIf="totalPages > 1">
+      <button 
+        (click)="previousPage()"
+        [disabled]="currentReviewPage === 0"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span>Page {{ currentReviewPage + 1 }} of {{ totalPages }}</span>
+      <button 
+        (click)="nextPage()"
+        [disabled]="currentReviewPage >= totalPages - 1"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading movie details...</p>
+</div>
+
+<!-- Error State -->
+<div class="error-message" *ngIf="errorMessage && !isLoading">
+  <i class="fas fa-exclamation-circle"></i>
+  <p>{{ errorMessage }}</p>
+  <button (click)="goBack()">Go Back</button>
+</div>

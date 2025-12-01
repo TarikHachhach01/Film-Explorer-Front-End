@@ -1,0 +1,51 @@
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-container">
+    <!-- Logo -->
+    <a routerLink="/search" class="navbar-logo">
+      <i class="fas fa-film"></i> FilmExplorer
+    </a>
+
+    <!-- Nav Links -->
+    <div class="navbar-menu">
+      <a routerLink="/search" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+        <i class="fas fa-home"></i> Home
+      </a>
+
+      <!-- Watchlist Link - Show when authenticated -->
+      <ng-container *ngIf="isAuthenticated$ | async">
+        <a routerLink="/watchlist" routerLinkActive="active" class="nav-link">
+          <i class="fas fa-list"></i> My Watchlist
+        </a>
+      </ng-container>
+
+      <!-- Auth Links - Show when NOT authenticated -->
+      <ng-container *ngIf="!(isAuthenticated$ | async)">
+        <a routerLink="/register" routerLinkActive="active" class="nav-link">
+          <i class="fas fa-user-plus"></i> Register
+        </a>
+        <a routerLink="/login" routerLinkActive="active" class="nav-link btn-login">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </a>
+      </ng-container>
+
+      <!-- User Menu - Show when authenticated -->
+      <ng-container *ngIf="isAuthenticated$ | async">
+        <div class="nav-user-menu">
+          <span class="user-greeting">
+            Welcome, <strong>{{ (currentUser$ | async)?.email }}</strong>
+            <span *ngIf="isAdmin()" class="admin-badge">ADMIN</span>
+          </span>
+          <button (click)="logout()" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Content -->
+<main class="page-content">
+  <router-outlet></router-outlet>
+</main>

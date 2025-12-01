@@ -1,0 +1,123 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Header -->
+    <div class="auth-header">
+      <h1>Welcome Back</h1>
+      <p>Sign in to your FilmExplorer account</p>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage }}
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          class="form-control"
+          [class.is-invalid]="hasError('email', 'required') || hasError('email', 'email')"
+          formControlName="email"
+          placeholder="Enter your email"
+          [disabled]="isLoading"
+          autocomplete="email"
+        />
+        <div *ngIf="hasError('email', 'required')" class="error-message">
+          Email is required
+        </div>
+        <div *ngIf="hasError('email', 'email')" class="error-message">
+          Please enter a valid email address
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <div class="password-header">
+          <label for="password">Password</label>
+          <a href="#" class="forgot-link">Forgot Password?</a>
+        </div>
+        <div class="password-input-group">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            class="form-control"
+            [class.is-invalid]="hasError('password', 'required') || hasError('password', 'minlength')"
+            formControlName="password"
+            placeholder="Enter your password"
+            [disabled]="isLoading"
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [disabled]="isLoading"
+            tabindex="-1"
+          >
+            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="hasError('password', 'required')" class="error-message">
+          Password is required
+        </div>
+        <div *ngIf="hasError('password', 'minlength')" class="error-message">
+          Password must be at least 6 characters
+        </div>
+      </div>
+
+      <!-- Remember Me -->
+      <div class="form-group checkbox-group">
+        <input
+          type="checkbox"
+          id="rememberMe"
+          formControlName="rememberMe"
+          [disabled]="isLoading"
+        />
+        <label for="rememberMe">Remember me for 30 days</label>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-block"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </span>
+        <span *ngIf="isLoading">
+          <i class="fas fa-spinner fa-spin"></i> Signing In...
+        </span>
+      </button>
+
+      <!-- Demo Login Button -->
+      <button
+        type="button"
+        class="btn btn-secondary btn-block"
+        (click)="demoLogin()"
+        [disabled]="isLoading"
+      >
+        <i class="fas fa-user-tie"></i> Demo Admin Login
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="auth-footer">
+      <p>Don't have an account? 
+        <a (click)="goToRegister()" class="link">Sign Up</a>
+      </p>
+    </div>
+  </div>
+</div>

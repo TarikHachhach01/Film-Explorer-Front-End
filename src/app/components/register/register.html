@@ -1,0 +1,168 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Header -->
+    <div class="auth-header">
+      <h1>Create Account</h1>
+      <p>Join FilmExplorer and discover amazing movies</p>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage }}
+    </div>
+
+    <!-- Register Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+      
+      <!-- First Name -->
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input
+          type="text"
+          id="firstName"
+          class="form-control"
+          [class.is-invalid]="hasError('firstName', 'required') || hasError('firstName', 'minlength')"
+          formControlName="firstName"
+          placeholder="Enter your first name"
+          [disabled]="isLoading"
+        />
+        <div *ngIf="hasError('firstName', 'required')" class="error-message">
+          First name is required
+        </div>
+        <div *ngIf="hasError('firstName', 'minlength')" class="error-message">
+          First name must be at least 2 characters
+        </div>
+      </div>
+
+      <!-- Last Name -->
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input
+          type="text"
+          id="lastName"
+          class="form-control"
+          [class.is-invalid]="hasError('lastName', 'required') || hasError('lastName', 'minlength')"
+          formControlName="lastName"
+          placeholder="Enter your last name"
+          [disabled]="isLoading"
+        />
+        <div *ngIf="hasError('lastName', 'required')" class="error-message">
+          Last name is required
+        </div>
+        <div *ngIf="hasError('lastName', 'minlength')" class="error-message">
+          Last name must be at least 2 characters
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          class="form-control"
+          [class.is-invalid]="hasError('email', 'required') || hasError('email', 'email')"
+          formControlName="email"
+          placeholder="Enter your email"
+          [disabled]="isLoading"
+        />
+        <div *ngIf="hasError('email', 'required')" class="error-message">
+          Email is required
+        </div>
+        <div *ngIf="hasError('email', 'email')" class="error-message">
+          Please enter a valid email address
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-input-group">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            class="form-control"
+            [class.is-invalid]="hasError('password', 'required') || hasError('password', 'minlength')"
+            formControlName="password"
+            placeholder="Enter your password (min 8 characters)"
+            [disabled]="isLoading"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [disabled]="isLoading"
+            tabindex="-1"
+          >
+            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="hasError('password', 'required')" class="error-message">
+          Password is required
+        </div>
+        <div *ngIf="hasError('password', 'minlength')" class="error-message">
+          Password must be at least 8 characters
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="password-input-group">
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmPassword"
+            class="form-control"
+            [class.is-invalid]="hasError('confirmPassword', 'required') || registerForm.hasError('passwordMismatch')"
+            formControlName="confirmPassword"
+            placeholder="Confirm your password"
+            [disabled]="isLoading"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleConfirmPasswordVisibility()"
+            [disabled]="isLoading"
+            tabindex="-1"
+          >
+            <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="hasError('confirmPassword', 'required')" class="error-message">
+          Please confirm your password
+        </div>
+        <div *ngIf="registerForm.hasError('passwordMismatch') && (f['confirmPassword'].dirty || f['confirmPassword'].touched)" class="error-message">
+          Passwords do not match
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-block"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <i class="fas fa-user-plus"></i> Create Account
+        </span>
+        <span *ngIf="isLoading">
+          <i class="fas fa-spinner fa-spin"></i> Creating Account...
+        </span>
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="auth-footer">
+      <p>Already have an account? 
+        <a (click)="goToLogin()" class="link">Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>

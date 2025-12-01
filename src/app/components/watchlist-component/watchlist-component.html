@@ -1,0 +1,166 @@
+<div class="watchlist-container">
+  <!-- Header with Stats -->
+  <div class="watchlist-header">
+    <h1>🎬 My Watchlist</h1>
+    
+    <div class="stats-grid" *ngIf="stats">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.totalCount }}</div>
+        <div class="stat-label">Total Movies</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.wantToWatchCount }}</div>
+        <div class="stat-label">Want to Watch</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.watchingCount }}</div>
+        <div class="stat-label">Watching</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.watchedCount }}</div>
+        <div class="stat-label">Watched</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button 
+      *ngFor="let status of statusOptions"
+      [class.active]="selectedStatus === status"
+      (click)="filterByStatus(status)"
+      class="filter-tab">
+      {{ status === 'ALL' ? 'All Movies' : getStatusText(status) }}
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your watchlist...</p>
+  </div>
+
+  <!-- Watchlist Grid -->
+  <div class="watchlist-grid" *ngIf="!isLoading && watchlistItems.length > 0">
+    <div class="watchlist-card" *ngFor="let item of watchlistItems">
+      <!-- Movie Poster -->
+      <div class="card-poster">
+        <img 
+          [src]="getPosterUrl(item.moviePosterPath)" 
+          [alt]="item.movieTitle"
+          class="poster-image">
+        
+        <!-- Status Badge -->
+        <div class="status-badge" [style.background-color]="getStatusColor(item.status)">
+          {{ getStatusText(item.status) }}
+        </div>
+      </div>
+
+      <!-- Movie Info -->
+      <div class="card-info">
+        <h3 class="movie-title">{{ item.movieTitle }}</h3>
+        <p class="movie-year" *ngIf="item.movieReleaseYear">{{ item.movieReleaseYear }}</p>
+        <p class="added-date">Added {{ formatDate(item.addedAt) }}</p>
+
+        <!-- Status Dropdown -->
+        <div class="status-selector">
+          <label>Status:</label>
+          <select 
+            [value]="item.status" 
+            (change)="updateStatus(item, $any($event.target).value)"
+            class="status-dropdown">
+            <option value="WANT_TO_WATCH">Want to Watch</option>
+            <option value="WATCHING">Watching</option>
+            <option value="WATCHED">Watched</option>
+            <option value="NOT_INTERESTED">Not Interested</option>
+          </select>
+        </div>
+
+        <!-- Privacy Toggle -->
+        <div class="privacy-toggle">
+          <label>
+            <input 
+              type="checkbox" 
+              [checked]="false"
+              (change)="togglePrivacy(item, $any($event.target).checked)">
+            <span>Make Public (friends can see)</span>
+          </label>
+        </div>
+
+        <!-- Notes Section -->
+        <div class="notes-section">
+          <div *ngIf="!isEditingNotes(item.id)">
+            <button 
+              class="add-notes-btn"
+              (click)="startEditingNotes(item.id, '')">
+              <i class="fas fa-plus"></i> Add Notes
+            </button>
+          </div>
+
+          <div *ngIf="isEditingNotes(item.id)" class="notes-editor">
+            <textarea 
+              [(ngModel)]="editingNotes[item.id]"
+              placeholder="Add your personal notes..."
+              rows="3"
+              class="notes-textarea"></textarea>
+            <div class="notes-actions">
+              <button 
+                class="save-btn"
+                (click)="saveNotes(item, editingNotes[item.id])">
+                Save
+              </button>
+              <button 
+                class="cancel-btn"
+                (click)="cancelEditingNotes(item.id)">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remove Button -->
+        <button 
+          class="remove-btn"
+          (click)="removeFromWatchlist(item)">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Results -->
+  <div class="no-results" *ngIf="!isLoading && watchlistItems.length === 0">
+    <i class="fas fa-film"></i>
+    <h3>No movies in your watchlist</h3>
+    <p *ngIf="selectedStatus === 'ALL'">Start adding movies to build your collection!</p>
+    <p *ngIf="selectedStatus !== 'ALL'">No movies with status "{{ getStatusText(selectedStatus) }}"</p>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button 
+      class="page-btn"
+      (click)="prevPage()"
+      [disabled]="currentPage === 0">
+      <i class="fas fa-chevron-left"></i> Previous
+    </button>
+    
+    <span class="page-info">
+      Page {{ currentPage + 1 }} of {{ totalPages }}
+      ({{ totalResults }} total)
+    </span>
+    
+    <button 
+      class="page-btn"
+      (click)="nextPage()"
+      [disabled]="currentPage >= totalPages - 1">
+      Next <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</div>

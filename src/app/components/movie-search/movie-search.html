@@ -1,0 +1,516 @@
+<div class="container">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-background"></div>
+    <div class="hero-content">
+      <h1>Discover Your Next Favorite Movie</h1>
+      <p>Explore thousands of films with our advanced search tools</p>
+      <div class="search-bar">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (keyup.enter)="searchWithNewCriteria()" 
+          placeholder="Search for movies by title, actor, or keyword..." 
+        />
+        <button (click)="searchWithNewCriteria()">🔍</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Admin Import Section (Inline) - SHOWS ONLY FOR ADMINS -->
+  <section class="admin-import-section" *ngIf="isAdmin">
+    <h2>📤 Admin: Import Movies from CSV</h2>
+    
+    <div class="import-container">
+      <!-- File Upload -->
+      <div class="file-upload-area">
+        <input 
+          type="file" 
+          #fileInput
+          accept=".csv"
+          (change)="onFileSelected($event)"
+          id="csvFileInput"
+          style="display: none;">
+        
+        <label for="csvFileInput" class="file-upload-label">
+          <span class="icon">📁</span>
+          <span class="text">{{ selectedFile ? selectedFile.name : 'Choose CSV File' }}</span>
+        </label>
+
+        <p class="file-info" *ngIf="selectedFile">
+          Selected: {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="import-actions">
+        <button 
+          class="import-upload-btn" 
+          (click)="uploadCsvFile()"
+          [disabled]="!selectedFile || isImporting">
+          <span class="icon">{{ isImporting ? '⏳' : '📤' }}</span>
+          {{ isImporting ? 'Importing...' : 'Import Movies' }}
+        </button>
+
+        <button 
+          class="import-sample-btn" 
+          (click)="downloadSampleCsv()">
+          <span class="icon">📄</span>
+          Download Sample CSV
+        </button>
+      </div>
+
+      <!-- Import Progress -->
+      <div class="import-progress" *ngIf="isImporting">
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <p>Processing CSV file...</p>
+      </div>
+
+      <!-- Import Result -->
+      <div class="import-result" *ngIf="importResult">
+        <div class="result-box" [class.success]="importResult.errorCount === 0" [class.warning]="importResult.errorCount > 0">
+          <h3>
+            <span class="icon">{{ importResult.errorCount === 0 ? '✅' : '⚠️' }}</span>
+            Import Complete
+          </h3>
+          <p class="summary">{{ importResult.summary }}</p>
+          
+          <div class="stats">
+            <div class="stat success-stat">
+              <span class="icon">✓</span>
+              <span>{{ importResult.successCount }} imported</span>
+            </div>
+            <div class="stat error-stat" *ngIf="importResult.errorCount > 0">
+              <span class="icon">✗</span>
+              <span>{{ importResult.errorCount }} errors</span>
+            </div>
+          </div>
+
+          <!-- Error List -->
+          <div class="error-details" *ngIf="importResult.errors && importResult.errors.length > 0">
+            <h4>Errors:</h4>
+            <ul>
+              <li *ngFor="let error of importResult.errors.slice(0, 5)">{{ error }}</li>
+              <li *ngIf="importResult.errors.length > 5">
+                ... {{ importResult.errors.length - 5 }} more errors
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import Error -->
+      <div class="import-error" *ngIf="importError">
+        <span class="icon">⚠️</span>
+        {{ importError }}
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters Section -->
+  <section class="filters-section">
+    <h2>Refine Your Search 🎬</h2>
+    
+    <div class="filters-grid">
+      <!-- Movie Description Search -->
+      <div class="filter-group">
+        <label for="overview">Movie Description</label>
+        <input 
+          type="text" 
+          id="overview" 
+          [(ngModel)]="overview" 
+          placeholder="Search in movie descriptions..." 
+        />
+      </div>
+
+      <!-- Genres -->
+      <div class="filter-group">
+        <label>Genres (Select Multiple)</label>
+        <div class="genres-container">
+          <div class="genre-checkbox" *ngFor="let genre of availableGenres">
+            <input 
+              type="checkbox" 
+              [id]="'genre-' + genre.toLowerCase()" 
+              [checked]="isGenreSelected(genre)" 
+              (change)="toggleGenre(genre)" 
+            />
+            <label [for]="'genre-' + genre.toLowerCase()">{{ genre }}</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TMDb Rating -->
+      <div class="filter-group">
+        <label>TMDb Rating</label>
+        <div class="range-container">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="color: var(--light); font-size: 0.85rem;">Min: {{ minRating.toFixed(1) }}</span>
+            <span style="color: var(--light); font-size: 0.85rem;">Max: {{ maxRating.toFixed(1) }}</span>
+          </div>
+          <label style="font-size: 0.75rem; color: var(--gray);">Minimum:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="minRating" 
+            [max]="maxRating"
+            min="0" 
+            step="0.1" 
+            class="range-slider" 
+          />
+          <label style="font-size: 0.75rem; color: var(--gray); margin-top: 8px;">Maximum:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="maxRating" 
+            [min]="minRating"
+            max="10" 
+            step="0.1" 
+            class="range-slider"
+          />
+        </div>
+      </div>
+
+      <!-- IMDb Rating -->
+      <div class="filter-group">
+        <label>IMDb Rating</label>
+        <div class="range-container">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="color: var(--light); font-size: 0.85rem;">Min: {{ minImdbRating.toFixed(1) }}</span>
+            <span style="color: var(--light); font-size: 0.85rem;">Max: {{ maxImdbRating.toFixed(1) }}</span>
+          </div>
+          <label style="font-size: 0.75rem; color: var(--gray);">Minimum:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="minImdbRating" 
+            [max]="maxImdbRating"
+            min="0" 
+            step="0.1" 
+            class="range-slider" 
+          />
+          <label style="font-size: 0.75rem; color: var(--gray); margin-top: 8px;">Maximum:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="maxImdbRating" 
+            [min]="minImdbRating"
+            max="10" 
+            step="0.1" 
+            class="range-slider"
+          />
+        </div>
+      </div>
+
+      <!-- Minimum Vote Count -->
+      <div class="filter-group">
+        <label for="minVoteCount">Minimum Vote Count</label>
+        <input 
+          type="number" 
+          id="minVoteCount" 
+          [(ngModel)]="minVoteCount" 
+          min="0" 
+          placeholder="e.g., 1000"
+        />
+      </div>
+
+      <!-- Release Year -->
+      <div class="filter-group">
+        <label>Release Year</label>
+        <div class="range-container">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="color: var(--light); font-size: 0.85rem;">From: {{ minYear }}</span>
+            <span style="color: var(--light); font-size: 0.85rem;">To: {{ maxYear }}</span>
+          </div>
+          <label style="font-size: 0.75rem; color: var(--gray);">From Year:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="minYear" 
+            [max]="maxYear"
+            min="1900" 
+            step="1" 
+            class="range-slider" 
+          />
+          <label style="font-size: 0.75rem; color: var(--gray); margin-top: 8px;">To Year:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="maxYear" 
+            [min]="minYear"
+            max="2025" 
+            step="1" 
+            class="range-slider"
+          />
+        </div>
+      </div>
+
+      <!-- Runtime -->
+      <div class="filter-group">
+        <label>Runtime (minutes)</label>
+        <div class="range-container">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="color: var(--light); font-size: 0.85rem;">Min: {{ minRuntime }}</span>
+            <span style="color: var(--light); font-size: 0.85rem;">Max: {{ maxRuntime }}</span>
+          </div>
+          <label style="font-size: 0.75rem; color: var(--gray);">Minimum:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="minRuntime" 
+            [max]="maxRuntime"
+            min="0" 
+            step="5" 
+            class="range-slider" 
+          />
+          <label style="font-size: 0.75rem; color: var(--gray); margin-top: 8px;">Maximum:</label>
+          <input 
+            type="range" 
+            [(ngModel)]="maxRuntime" 
+            [min]="minRuntime"
+            max="300" 
+            step="5" 
+            class="range-slider"
+          />
+        </div>
+      </div>
+
+      <!-- Quick Filters -->
+      <div class="filter-group toggles">
+        <label>Quick Filters</label>
+        <div class="toggle-container">
+          <div class="toggle">
+            <input type="checkbox" id="searchForeign" [(ngModel)]="searchForeign" />
+            <label for="searchForeign">Include Foreign Films</label>
+          </div>
+          <div class="toggle">
+            <input type="checkbox" id="highlyRated" [(ngModel)]="highlyRated" />
+            <label for="highlyRated">Highly Rated (7.0+)</label>
+          </div>
+          <div class="toggle">
+            <input type="checkbox" id="popular" [(ngModel)]="popular" />
+            <label for="popular">Popular (1000+ votes)</label>
+          </div>
+          <div class="toggle">
+            <input type="checkbox" id="recentlyReleased" [(ngModel)]="recentlyReleased" />
+            <label for="recentlyReleased">Recently Released</label>
+          </div>
+          <div class="toggle">
+            <input type="checkbox" id="shortRuntime" [(ngModel)]="shortRuntime" />
+            <label for="shortRuntime">Short Runtime (&lt;90 min)</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sort Options -->
+      <div class="filter-group sort-options">
+        <div class="sort-group">
+          <label for="sortBy">Sort By</label>
+          <select id="sortBy" [(ngModel)]="sortBy">
+            <option value="popularity">Popularity</option>
+            <option value="rating">TMDb Rating</option>
+            <option value="imdb">IMDb Rating</option>
+            <option value="year">Release Year</option>
+            <option value="title">Title</option>
+            <option value="runtime">Runtime</option>
+            <option value="votes">Vote Count</option>
+          </select>
+        </div>
+        <div class="sort-group">
+          <label for="sortDirection">Order</label>
+          <select id="sortDirection" [(ngModel)]="sortDirection">
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="button-group">
+      <button class="search-button" (click)="searchWithNewCriteria()">
+        <span class="icon">🔍</span> Search Movies
+      </button>
+      <button class="clear-button" (click)="clearFilters()">
+        <span class="icon">✖️</span> Clear Filters
+      </button>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Searching movies...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage && !isLoading" class="error-message">
+    <span class="icon">⚠️</span>
+    <div>
+      <strong>Error:</strong> {{ errorMessage }}
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <section class="results-section" *ngIf="!isLoading">
+    <div class="results-header" *ngIf="searchResponse">
+      <h2>{{ searchResponse.totalResults > 0 ? 'Search Results' : 'No Results Found' }}</h2>
+      <div class="results-info" *ngIf="searchResponse.totalResults > 0">
+        <span class="results-count">
+          {{ searchResponse.totalResults }} movie{{ searchResponse.totalResults !== 1 ? 's' : '' }}
+        </span>
+        <span *ngIf="searchResponse.searchTimeMs" class="search-time">
+          in {{ searchResponse.searchTimeMs }}ms
+        </span>
+        `
+        <!-- Pagination Controls -->
+        <div class="pagination">
+          <button 
+            class="page-btn" 
+            (click)="prevPage()" 
+            [disabled]="currentPage === 0"
+            title="Previous page"
+          >
+            <span class="icon">◀</span>
+          </button>
+          <span class="current-page">{{ currentPage + 1 }} / {{ totalPages || 1 }}</span>
+          <button 
+            class="page-btn" 
+            (click)="nextPage()" 
+            [disabled]="currentPage >= totalPages - 1"
+            title="Next page"
+          >
+            <span class="icon">▶</span>
+          </button>
+          <select (change)="changePageSize($event)" [value]="pageSize">
+            <option value="12">12 per page</option>
+            <option value="20">20 per page</option>
+            <option value="36">36 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Buttons (Regular Users Only) - AFTER results-header -->
+    <div class="export-section" *ngIf="searchResponse && movies.length > 0 && !isAdmin">
+      <div class="export-buttons">
+        <button 
+          class="export-btn export-page-btn" 
+          (click)="exportCurrentPage()"
+          [disabled]="isExporting"
+          title="Export current page results to CSV">
+          <span class="icon">📥</span>
+          <span>Export This Page ({{ movies.length }} movies)</span>
+        </button>
+
+        <button 
+          class="export-btn export-all-btn" 
+          (click)="exportAllResults()"
+          [disabled]="isExporting"
+          title="Export all search results to CSV">
+          <span class="icon">💾</span>
+          <span>Export All Results ({{ searchResponse.totalResults }} movies)</span>
+        </button>
+      </div>
+
+      <p class="export-hint" *ngIf="isExporting">
+        <span class="icon">⏳</span> Preparing CSV file...
+      </p>
+    </div>
+
+    <!-- Applied Filters Summary -->
+    <div *ngIf="searchResponse?.appliedFilters && searchResponse?.appliedFilters !== 'No filters'" class="filters-summary">
+      <span class="icon">🎯</span>
+      <span>{{ searchResponse?.appliedFilters }}</span>
+    </div>
+
+    <!-- Movies Grid -->
+    <div class="movies-grid" *ngIf="movies.length > 0">
+      <div class="movie-card" *ngFor="let movie of movies">
+        
+        <!-- Movie Poster with Quick Add Button -->
+        <div class="movie-poster-wrapper" (click)="viewMovieDetail(movie.id)">
+          <img 
+            *ngIf="movie.posterPath" 
+            [src]="'https://image.tmdb.org/t/p/w500' + movie.posterPath" 
+            [alt]="movie.title" 
+            class="movie-poster" 
+            loading="lazy"
+          />
+          <div *ngIf="!movie.posterPath" class="no-poster">
+            <span class="icon">🎬</span>
+            <span>No Image</span>
+          </div>
+
+          <!-- Quick Add to Watchlist Button -->
+          <button 
+            *ngIf="isAuthenticated" 
+            class="quick-add-watchlist"
+            (click)="quickAddToWatchlist(movie.id, $event)"
+            [class.in-watchlist]="isMovieInWatchlist(movie.id)"
+            [disabled]="isAddingToWatchlist[movie.id]"
+          >
+            <i class="fas" [class.fa-plus]="!isMovieInWatchlist(movie.id)" [class.fa-check]="isMovieInWatchlist(movie.id)"></i>
+            <span *ngIf="!isMovieInWatchlist(movie.id)">Add to Watchlist</span>
+            <span *ngIf="isMovieInWatchlist(movie.id)">In Watchlist</span>
+          </button>
+        </div>
+        
+        <!-- Movie Info -->
+        <div class="movie-info" (click)="viewMovieDetail(movie.id)">
+          <h3 class="movie-title" [title]="movie.title">{{ movie.title }}</h3>
+          <p class="movie-year">{{ movie.releaseYear || 'N/A' }}</p>
+          
+          <!-- Rating -->
+          <div class="movie-rating">
+            <span class="icon">⭐</span>
+            <span class="rating-value">{{ formatRating(movie.rating) }}</span>
+            <span class="rating-source" [title]="getRatingSource(movie) + ' Rating'">
+              {{ getRatingSource(movie) }}
+            </span>
+            <span *ngIf="movie.voteCount" class="vote-count" [title]="movie.voteCount + ' votes'">
+              ({{ movie.voteCount | number }})
+            </span>
+          </div>
+          
+          <!-- Genres -->
+          <div class="movie-genres" *ngIf="movie.genres && movie.genres.length > 0">
+            <span class="genre-badge" *ngFor="let genre of movie.genres.slice(0, 3)">
+              {{ genre }}
+            </span>
+            <span class="genre-badge more" *ngIf="movie.genres.length > 3" [title]="movie.genres.slice(3).join(', ')">
+              +{{ movie.genres.length - 3 }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- Movie Overview (Hover) -->
+        <div class="movie-overview" *ngIf="movie.overview || movie.director || movie.runtime">
+          <p *ngIf="movie.overview" class="overview-text">{{ movie.overview }}</p>
+          <div class="movie-details">
+            <span *ngIf="movie.director && movie.director !== 'Unknown'">
+              <strong>Director:</strong> {{ movie.director }}
+            </span>
+            <span *ngIf="movie.runtime">
+              <strong>Runtime:</strong> {{ movie.runtime }} min
+            </span>
+            <span *ngIf="movie.mainStars && movie.mainStars.length > 0">
+              <strong>Stars:</strong> {{ movie.mainStars.slice(0, 2).join(', ') }}
+            </span>
+            <span *ngIf="movie.imdbRating && movie.imdbRating > 0">
+              <strong>IMDb:</strong> {{ movie.imdbRating.toFixed(1) }}/10
+            </span>
+            <span *ngIf="movie.popularity">
+              <strong>Popularity:</strong> {{ movie.popularity.toFixed(1) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results Message -->
+    <div *ngIf="!isLoading && movies.length === 0 && !errorMessage" class="no-results">
+      <span class="icon">🎭</span>
+      <h3>No movies found</h3>
+      <p>Try adjusting your search criteria or filters</p>
+      <button class="clear-button" (click)="clearFilters()" style="margin-top: 20px; width: auto; padding: 12px 30px;">
+        Clear All Filters
+      </button>
+    </div>
+  </section>
+</div>
