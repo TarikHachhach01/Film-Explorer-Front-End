@@ -10,7 +10,7 @@ import { LoginRequest } from '../../models/auth.model';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule  // ← ADD THIS
+    ReactiveFormsModule  
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css']

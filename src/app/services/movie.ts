@@ -3,14 +3,15 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { MovieSearchRequest, MovieSearchResponse, MovieCard } from '../models/movie.model';
+import { environment } from '../../environments/environment'
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class MovieService {
   // Base URL for your backend API
-  private readonly API_BASE_URL = 'http://localhost:8080/api/movies';
-  
+ private readonly API_BASE_URL = `${environment.apiUrl}/api/movies`;  
   // HTTP Headers
   private readonly httpOptions = {
     headers: new HttpHeaders({

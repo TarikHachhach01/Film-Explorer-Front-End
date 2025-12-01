@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { AuthService } from './auth-service';  // ✅ ADDED
+import { AuthService } from './auth-service';  
 import { 
   WatchlistItem, 
   WatchlistResponse, 
@@ -10,22 +10,18 @@ import {
   WatchlistStatus,
   UpdateWatchlistDetailsRequest 
 } from '../models/movie.model';
-
+import { environment } from '../../environments/environment'
 @Injectable({
   providedIn: 'root'
 })
 export class WatchlistService {
-  private readonly API_BASE_URL = 'http://localhost:8080/api/watchlist';
-  
+  private readonly API_BASE_URL = `${environment.apiUrl}/api/watchlist`  
   constructor(
     private http: HttpClient,
-    private authService: AuthService  // ✅ INJECTED AuthService
+    private authService: AuthService  
   ) { }
 
-  /**
-   * Get HTTP headers with JWT token
-   * ✅ ADDED THIS METHOD
-   */
+ 
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     return new HttpHeaders({

@@ -3,13 +3,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { RegisterRequest, LoginRequest, AuthenticationResponse, User } from '../models/auth.model';
+import { environment } from '../../environments/environment'
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_BASE_URL = 'http://localhost:8080/api/auth';
-  private readonly TOKEN_KEY = 'jwt_token';
+private readonly API_BASE_URL = `${environment.apiUrl}/api/auth`; 
+ private readonly TOKEN_KEY = 'jwt_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'current_user';
 

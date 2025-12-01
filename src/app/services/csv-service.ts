@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuthService } from './auth-service';
 import { MovieSearchRequest } from '../models/movie.model';
+import { environment } from '../../environments/environment'
 
 export interface ImportResult {
   successCount: number;
@@ -17,11 +18,12 @@ export interface ImportResult {
   providedIn: 'root'
 })
 export class CsvService {
-  private readonly API_BASE_URL = 'http://localhost:8080/api/movies';
+  private readonly API_BASE_URL = `${environment.apiUrl}/api/movies`;
+  
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService  // ✅ Inject AuthService to get token
+    private authService: AuthService  
   ) { }
 
   /**
