@@ -1,11 +1,11 @@
 {
   "version": 2,
   "buildCommand": "ng build --configuration production",
-  "outputDirectory": "dist/moviesapp",
+  "outputDirectory": "dist/moviesapp/browser",
   "framework": "angular",
   "rewrites": [
     {
-      "source": "/(.*)", 
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
