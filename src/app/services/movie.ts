@@ -11,7 +11,7 @@ import { environment } from '../../environments/environment'
 })
 export class MovieService {
   // Base URL for your backend API
- private readonly API_BASE_URL = `${environment.apiUrl}/api/movies`;  
+ private readonly API_BASE_URL = `${environment.apiUrl}/movies`;  
   // HTTP Headers
   private readonly httpOptions = {
     headers: new HttpHeaders({

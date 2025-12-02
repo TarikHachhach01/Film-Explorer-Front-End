@@ -18,7 +18,7 @@ export interface ImportResult {
   providedIn: 'root'
 })
 export class CsvService {
-  private readonly API_BASE_URL = `${environment.apiUrl}/api/movies`;
+  private readonly API_BASE_URL = `${environment.apiUrl}/movies`;
   
 
   constructor(

@@ -15,7 +15,7 @@ import { environment } from '../../environments/environment'
   providedIn: 'root'
 })
 export class WatchlistService {
-  private readonly API_BASE_URL = `${environment.apiUrl}/api/watchlist`  
+  private readonly API_BASE_URL = `${environment.apiUrl}/watchlist`  
   constructor(
     private http: HttpClient,
     private authService: AuthService  

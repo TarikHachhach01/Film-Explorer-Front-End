@@ -9,7 +9,7 @@ import { environment } from '../../environments/environment'
   providedIn: 'root'
 })
 export class AuthService {
-private readonly API_BASE_URL = `${environment.apiUrl}/api/auth`; 
+private readonly API_BASE_URL = `${environment.apiUrl}/auth`; 
  private readonly TOKEN_KEY = 'jwt_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'current_user';
