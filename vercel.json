@@ -1,20 +1,12 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/angular"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/$1"
-    },
+  "buildCommand": "ng build --configuration production",
+  "outputDirectory": "dist/moviesapp",
+  "framework": "angular",
+  "rewrites": [
     {
       "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200
+      "destination": "/index.html"
     }
   ]
 }
