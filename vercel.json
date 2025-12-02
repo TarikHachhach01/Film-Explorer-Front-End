@@ -5,7 +5,7 @@
   "framework": "angular",
   "rewrites": [
     {
-      "src": "/(.*)",
+      "source": "/(.*)", 
       "destination": "/index.html"
     }
   ]
