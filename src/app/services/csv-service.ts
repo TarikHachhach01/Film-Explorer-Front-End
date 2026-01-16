@@ -46,14 +46,14 @@ export class CsvService {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Don't set Content-Type header for FormData - browser will set it with boundary
+    
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${this.authService.getToken()}`
     });
 
     return this.http.post<ImportResult>(`${this.API_BASE_URL}/import`, formData, { headers }).pipe(
       tap(result => {
-        console.log('✅ Import completed:', result.summary);
+        console.log(' Import completed:', result.summary);
         console.log('Success:', result.successCount, 'Errors:', result.errorCount);
       })
     );
@@ -70,7 +70,7 @@ export class CsvService {
       responseType: 'blob',
       observe: 'body'
     }).pipe(
-      tap(() => console.log('✅ CSV export completed'))
+      tap(() => console.log(' CSV export completed'))
     );
   }
 
@@ -125,7 +125,7 @@ export class CsvService {
     link.click();
     window.URL.revokeObjectURL(url);
     
-    console.log('✅ File downloaded:', filename);
+    console.log(' File downloaded:', filename);
   }
 
   /**
@@ -140,6 +140,6 @@ The Shawshank Redemption,1994,9.3,28000,142,Frank Darabont,"[Drama]","Two impris
     const blob = new Blob([sampleData], { type: 'text/csv' });
     this.downloadFile(blob, 'sample_movies_import.csv');
     
-    console.log('✅ Sample CSV template downloaded');
+    console.log(' Sample CSV template downloaded');
   }
 }

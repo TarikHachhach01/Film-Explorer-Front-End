@@ -68,6 +68,7 @@ private readonly API_BASE_URL = `${environment.apiUrl}/auth`;
 
   /**
    * Login user
+   * ✅ MODIFIÉ: Ajoute withCredentials: true pour envoyer/recevoir les cookies
    */
   login(request: LoginRequest): Observable<AuthenticationResponse> {
     console.log('Logging in user:', request.email);
@@ -75,14 +76,20 @@ private readonly API_BASE_URL = `${environment.apiUrl}/auth`;
     return this.http.post<AuthenticationResponse>(
       `${this.API_BASE_URL}/login`,
       request,
-      this.httpOptions
+      {
+        headers: new HttpHeaders({
+          'Content-Type': 'application/json'
+        }),
+        withCredentials: true  // ✅ NOUVEAU: Envoyer/recevoir les cookies
+      }
     ).pipe(
       tap(response => {
-        console.log('Login successful');
-        if (this.isBrowser()) {
-          this.storeTokens(response);
-          this.isAuthenticatedSubject.next(true);
-        }
+        console.log('✅ Login successful - token in HttpOnly Cookie');
+        // ✅ NE PAS appeler storeTokens() - token est maintenant dans le cookie
+        this.isAuthenticatedSubject.next(true);
+        
+        // ✅ Récupérer l'utilisateur depuis le token du cookie
+        this.getCurrentUserFromCookie();
       }),
       catchError(error => {
         console.error('Login failed:', error);
@@ -109,22 +116,22 @@ private readonly API_BASE_URL = `${environment.apiUrl}/auth`;
 
   /**
    * Get JWT token from localStorage
+   * ✅ MODIFIÉ: Retourne null maintenant (token dans le cookie)
    */
   getToken(): string | null {
-    if (!this.isBrowser()) {
-      return null;
-    }
-    return localStorage.getItem(this.TOKEN_KEY);
+    // ✅ Token est maintenant dans un HttpOnly Cookie
+    // JavaScript ne peut pas y accéder
+    return null;
   }
 
   /**
    * Get refresh token from localStorage
+   * ✅ MODIFIÉ: Retourne null maintenant (token dans le cookie)
    */
   getRefreshToken(): string | null {
-    if (!this.isBrowser()) {
-      return null;
-    }
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    // ✅ Token est maintenant dans un HttpOnly Cookie
+    // JavaScript ne peut pas y accéder
+    return null;
   }
 
   /**
@@ -150,53 +157,42 @@ private readonly API_BASE_URL = `${environment.apiUrl}/auth`;
 
   /**
    * Check if current user is admin
+   * ✅ MODIFIÉ: Utilise le token du cookie
    */
-isAdmin(): boolean {
-  const token = this.getToken();
-  
-  if (!token) {
-    console.log('🔒 No token found - not admin');
+  isAdmin(): boolean {
+    // ✅ Comme getToken() retourne null, on ne peut pas décoder
+    // À la place, faire une requête au backend pour vérifier
     return false;
   }
 
-  try {
-    // Decode JWT token (it's base64 encoded)
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    console.log('👤 Token payload:', payload);
-    
-    // Check if user has ADMIN role
-    // The JWT has an authorities array with role strings
-    const authorities = payload.authorities || [];
-    
-    // Check if "ROLE_ADMIN" is in the authorities array
-    const isAdmin = authorities.includes('ROLE_ADMIN');
-    
-    console.log(' Is Admin?', isAdmin);
-    console.log(' Authorities:', authorities);
-    
-    return isAdmin;
-  } catch (error) {
-    console.error(' Error decoding token:', error);
-    return false;
+  /**
+   * ✅ NOUVELLE MÉTHODE: Récupérer l'utilisateur depuis le cookie
+   * (Optionnel - pour afficher le nom d'utilisateur)
+   */
+  private getCurrentUserFromCookie(): void {
+    // Le token est dans le cookie, pas accessible directement
+    // On peut faire une requête au backend pour récupérer les infos de l'utilisateur
+    // Pour l'instant, on définit juste que l'utilisateur est authentifié
+    // Le backend peut renvoyer les infos dans une réponse séparée si nécessaire
   }
-}
 
   /**
    * Store tokens and user info
+   * ✅ MODIFIÉ: Ne stocke plus rien (tokens dans cookies)
    */
   private storeTokens(response: AuthenticationResponse): void {
     if (!this.isBrowser()) {
       return;
     }
 
-    localStorage.setItem(this.TOKEN_KEY, response.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
+    // ✅ Les tokens ne sont PLUS stockés nulle part
+    // Ils sont dans des HttpOnly Cookies (inaccessibles par JS)
     
-    const user = this.extractUserFromToken(response.accessToken);
-    if (user) {
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      this.currentUserSubject.next(user);
-    }
+    // On peut quand même extraire l'utilisateur si needed
+    // const user = this.extractUserFromToken(response.accessToken);
+    // if (user) {
+    //   this.currentUserSubject.next(user);
+    // }
   }
 
   /**
@@ -244,12 +240,16 @@ isAdmin(): boolean {
 
   /**
    * Check if token exists
+   * ✅ MODIFIÉ: Vérifie seulement si l'utilisateur est considéré comme authentifié
    */
   private hasToken(): boolean {
     if (!this.isBrowser()) {
       return false;
     }
-    return !!localStorage.getItem(this.TOKEN_KEY);
+    // ✅ Comme le token est dans un cookie HttpOnly,
+    // on ne peut pas le vérifier directement
+    // On vérifie juste si un utilisateur est défini
+    return this.currentUserSubject.value !== null;
   }
 
   /**

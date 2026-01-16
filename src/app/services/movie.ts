@@ -10,9 +10,7 @@ import { environment } from '../../environments/environment'
   providedIn: 'root'
 })
 export class MovieService {
-  // Base URL for your backend API
  private readonly API_BASE_URL = `${environment.apiUrl}/movies`;  
-  // HTTP Headers
   private readonly httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'
